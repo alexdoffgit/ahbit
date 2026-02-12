@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,11 +34,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import com.example.ahbit.ui.theme.AhbitTheme
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,23 +55,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TodoPage() {
-    val bringIntoViewRequester = remember { BringIntoViewRequester() }
-    val scope = rememberCoroutineScope()
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            Box(
-                modifier = Modifier
-                    .imePadding()
-                    .bringIntoViewRequester(bringIntoViewRequester)
-                    .padding(8.dp)
-            ) {
-                TodoAddField()
-            }
+            TodoAddField()
         }
     ) { paddingValues -> TodoList(
         itemss = listOf("do laundry", "clean house", "do homework"),
@@ -105,22 +97,36 @@ fun TodoList(itemss: List<String>, modifier: Modifier) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TodoAddField() {
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    val scope = rememberCoroutineScope()
     var text by remember { mutableStateOf("") }
 
-    Row(
-        modifier = Modifier.
-            fillMaxWidth()
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Box(
+        Modifier
+            .imePadding()
     ) {
-        OutlinedTextField(
-            value = text,
-            onValueChange = { text = it }
-        )
-        Button(onClick = {}) {
-            Text("+")
+        Row(
+            modifier = Modifier.fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                modifier = Modifier
+                    .bringIntoViewRequester(bringIntoViewRequester)
+                    .onFocusChanged {
+                        if (it.isFocused) {
+                            scope.launch { bringIntoViewRequester.bringIntoView() }
+                        }
+                    }
+            )
+            Button(onClick = {}) {
+                Text("+")
+            }
         }
     }
 }
