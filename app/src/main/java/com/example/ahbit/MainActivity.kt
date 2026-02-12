@@ -28,6 +28,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -57,13 +58,25 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun TodoPage() {
+    var text by remember { mutableStateOf("") }
+    val todoList = remember { mutableStateListOf("do laundry", "clean house", "do homework") }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            TodoAddField()
+            TodoAddField(
+                text = text,
+                onValueChange = { text = it },
+                onAddClick = {
+                    if (text.isNotBlank()) {
+                        todoList.add(text)
+                        text = ""
+                    }
+                }
+            )
         }
     ) { paddingValues -> TodoList(
-        itemss = listOf("do laundry", "clean house", "do homework"),
+        itemss = todoList,
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
@@ -99,10 +112,9 @@ fun TodoList(itemss: List<String>, modifier: Modifier) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun TodoAddField() {
+fun TodoAddField(text: String, onValueChange: (String) -> Unit, onAddClick: () -> Unit) {
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
     val scope = rememberCoroutineScope()
-    var text by remember { mutableStateOf("") }
 
     Box(
         Modifier
@@ -115,7 +127,7 @@ fun TodoAddField() {
         ) {
             OutlinedTextField(
                 value = text,
-                onValueChange = { text = it },
+                onValueChange = onValueChange,
                 modifier = Modifier
                     .bringIntoViewRequester(bringIntoViewRequester)
                     .onFocusChanged {
@@ -124,7 +136,7 @@ fun TodoAddField() {
                         }
                     }
             )
-            Button(onClick = {}) {
+            Button(onClick = onAddClick) {
                 Text("+")
             }
         }
