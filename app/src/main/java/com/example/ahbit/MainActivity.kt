@@ -40,14 +40,16 @@ import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ahbit.ui.theme.AhbitTheme
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-//        enableEdgeToEdge()
+//        WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
             AhbitTheme {
                 TodoPage()
@@ -57,56 +59,43 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun TodoPage() {
-    var text by remember { mutableStateOf("") }
-    val todoList = remember { mutableStateListOf("do laundry", "clean house", "do homework") }
-
+fun TodoPage(viewModel: TodoViewModel = viewModel()) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
             TodoAddField(
-                text = text,
-                onValueChange = { text = it },
-                onAddClick = {
-                    if (text.isNotBlank()) {
-                        todoList.add(text)
-                        text = ""
-                    }
-                }
+                text = viewModel.text,
+                onValueChange = viewModel::onTextChange,
+                onAddClick = viewModel::addTodo
             )
         }
     ) { paddingValues -> TodoList(
-        itemss = todoList,
+        itemss = viewModel.todoList,
         modifier = Modifier
             .fillMaxSize()
             .padding(paddingValues)
     ) }
 }
 
-@Composable
-fun TodoItem(content: String) {
-    var checked by remember { mutableStateOf(false) }
+class TodoViewModel: ViewModel() {
+    var text by mutableStateOf("")
+        private set
+    var todoList = mutableStateListOf("do laundry", "clean house", "not do homework")
+        private set
 
-    Row(
-        modifier = Modifier.padding(1.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Checkbox(
-            checked = checked,
-            onCheckedChange = { checked = it }
-        )
-        Text(content)
+    fun onTextChange(newText: String) {
+        text = newText
     }
-}
 
-@Composable
-fun TodoList(itemss: List<String>, modifier: Modifier) {
-    LazyColumn(
-        modifier = modifier
-    ) {
-        items(itemss) {
-            item -> TodoItem(item)
+    fun addTodo() {
+        if (text.isNotBlank()) {
+            todoList.add(text)
+            text = ""
         }
+    }
+
+    fun removeTodo(todo: String) {
+        todoList.remove(todo)
     }
 }
 
@@ -142,3 +131,33 @@ fun TodoAddField(text: String, onValueChange: (String) -> Unit, onAddClick: () -
         }
     }
 }
+
+@Composable
+fun TodoList(itemss: List<String>, modifier: Modifier) {
+    LazyColumn(
+        modifier = modifier
+    ) {
+        items(itemss) {
+                item -> TodoItem(item)
+        }
+    }
+}
+
+@Composable
+fun TodoItem(content: String) {
+    var checked by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier.padding(1.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Checkbox(
+            checked = checked,
+            onCheckedChange = { checked = it }
+        )
+        Text(content)
+    }
+}
+
+
+
