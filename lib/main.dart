@@ -1,4 +1,7 @@
+import 'package:ahbit/create_habit.dart';
 import 'package:flutter/material.dart';
+
+final navigatorKey = GlobalKey<NavigatorState>();
 
 void main() {
   runApp(const MyApp());
@@ -37,7 +40,15 @@ class HabitListPage extends StatelessWidget {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () async {
+          final result = await Navigator.of(context).push<String>(
+              MaterialPageRoute(builder: (context) => const CreateHabitPage()));
+
+          if (result != null) {
+            ScaffoldMessenger.of(navigatorKey.currentContext!)
+                .showSnackBar(SnackBar(content: Text('returned $result')));
+          }
+        },
         tooltip: 'None',
         child: const Icon(Icons.add),
       ),
